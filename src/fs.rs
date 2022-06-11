@@ -22,11 +22,11 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         // TODO: Add some real error handling!
         let file_name = entry_path.file_name().unwrap();
         let file_size = get_size(entry_path.clone()).unwrap();
-        let last_accessed_time = get_last_accessed_time(entry_path.clone()).unwrap();
+        let last_modified_time = get_last_modified_time(entry_path.clone()).unwrap();
 
         println!("{} {} {}",
                  file_size,
-                 last_accessed_time,
+                 last_modified_time,
                  file_name.to_str().unwrap());
     }
 
@@ -50,13 +50,13 @@ fn get_size(path: PathBuf) -> Result<u64, io::Error> {
     };
 }
 
-fn get_last_accessed_time(path: PathBuf) -> Result<String, io::Error> {
+fn get_last_modified_time(path: PathBuf) -> Result<String, io::Error> {
     return match metadata(path) {
         Ok(stats) => {
-            return match stats.accessed() {
-                Ok(last_accessed_time) => {
-                    let last_accessed_time_dt: DateTime<Utc> = last_accessed_time.into();
-                    Ok(last_accessed_time_dt.format("%b %_d %G %H:%I").to_string())
+            return match stats.modified() {
+                Ok(last_modified_time) => {
+                    let last_modified_time_dt: DateTime<Utc> = last_modified_time.into();
+                    Ok(last_modified_time_dt.format("%b %_d %G %H:%I").to_string())
                 },
                 Err(error) => Err(error),
             };
