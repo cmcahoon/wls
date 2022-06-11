@@ -22,7 +22,8 @@ fn main() {
     }
 
     // Iterate the filesystem starting at the path
-    println!("{:?}", recurse(path));
-
-    println!("Hello, world! {:?}", path);
+    match recurse(path) {
+        Ok(_) => {}, // intentionally empty
+        Err(err) => println!("ERROR: {}", err),
+    };
 }

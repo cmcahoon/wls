@@ -2,7 +2,7 @@ use std::io;
 use std::fs::metadata;
 use std::fs::read_dir;
 
-pub fn recurse(path: &str) -> io::Result<()> {
+pub fn recurse(path: &str) -> Result<(), io::Error> {
     // ERROR: Only process directories
     let is_dir = is_directory(path);
     if !is_dir {
@@ -15,7 +15,7 @@ pub fn recurse(path: &str) -> io::Result<()> {
         let entry = result?;
         let entry_path = entry.path();
         let file_name = entry_path.file_name().unwrap();
-        println!("{:?}", file_name);
+        println!("{}", file_name.to_str().unwrap());
     }
 
     Ok(())
