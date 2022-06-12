@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use std::io;
 use std::fs::metadata;
 use std::fs::read_dir;
+use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 
 pub fn recurse(path: &str) -> Result<(), io::Error> {
@@ -20,14 +21,21 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         // Query attributes
         //
         // TODO: Add some real error handling!
+        let uid = get_uid(&entry_path).unwrap();
+        let gid = get_gid(&entry_path).unwrap();
         let file_name = entry_path.file_name().unwrap();
         let file_size = get_size(entry_path.clone()).unwrap();
         let last_modified_time = get_last_modified_time(entry_path.clone()).unwrap();
 
-        println!("{} {} {}",
-                 file_size,
-                 last_modified_time,
-                 file_name.to_str().unwrap());
+        println!
+        (
+            "{} {} {} {} {}",
+            uid,
+            gid,
+            file_size,
+            last_modified_time,
+            file_name.to_str().unwrap()
+        );
     }
 
     Ok(())
@@ -63,4 +71,18 @@ fn get_last_modified_time(path: PathBuf) -> Result<String, io::Error> {
         },
         Err(error) => Err(error),
     };
+}
+
+fn get_uid(path: &PathBuf) -> Result<u32, io::Error> {
+    return match metadata(path) {
+        Ok(stats) => Ok(stats.uid()),
+        Err(error) => Err(error),
+    }
+}
+
+fn get_gid(path: &PathBuf) -> Result<u32, io::Error> {
+    return match metadata(path) {
+        Ok(stats) => Ok(stats.gid()),
+        Err(error) => Err(error),
+    }
 }
