@@ -22,6 +22,7 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         //
         // TODO: Add some real error handling!
         let permissions = get_permissions(&entry_path).unwrap();
+        let num_hard_links = get_number_hard_links(&entry_path).unwrap();
         let uid = get_uid(&entry_path).unwrap();
         let gid = get_gid(&entry_path).unwrap();
         let file_name = entry_path.file_name().unwrap();
@@ -30,8 +31,9 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
 
         println!
         (
-            "{} {} {} {} {} {}",
+            "{} {} {} {} {} {} {}",
             permissions,
+            num_hard_links,
             uid,
             gid,
             file_size,
@@ -92,6 +94,13 @@ fn get_gid(path: &PathBuf) -> Result<u32, io::Error> {
 fn get_permissions(path: &PathBuf) -> Result<u32, io::Error> {
     match metadata(path) {
         Ok(stats) => Ok(stats.mode()),
+        Err(error) => Err(error)
+    }
+}
+
+fn get_number_hard_links(path: &PathBuf) -> Result<u64, io::Error> {
+    match metadata(path) {
+        Ok(stats) => Ok(stats.nlink()),
         Err(error) => Err(error)
     }
 }
