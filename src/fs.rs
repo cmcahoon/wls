@@ -21,6 +21,7 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         // Query attributes
         //
         // TODO: Add some real error handling!
+        let permissions = get_permissions(&entry_path).unwrap();
         let uid = get_uid(&entry_path).unwrap();
         let gid = get_gid(&entry_path).unwrap();
         let file_name = entry_path.file_name().unwrap();
@@ -29,7 +30,8 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
 
         println!
         (
-            "{} {} {} {} {}",
+            "{} {} {} {} {} {}",
+            permissions,
             uid,
             gid,
             file_size,
@@ -84,5 +86,12 @@ fn get_gid(path: &PathBuf) -> Result<u32, io::Error> {
     return match metadata(path) {
         Ok(stats) => Ok(stats.gid()),
         Err(error) => Err(error),
+    }
+}
+
+fn get_permissions(path: &PathBuf) -> Result<u32, io::Error> {
+    match metadata(path) {
+        Ok(stats) => Ok(stats.mode()),
+        Err(error) => Err(error)
     }
 }
