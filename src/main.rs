@@ -3,6 +3,7 @@
 extern crate core;
 
 mod fs;
+mod utils;
 
 use std::env;
 use std::process::exit;

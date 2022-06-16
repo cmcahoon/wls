@@ -4,6 +4,7 @@ use std::fs::metadata;
 use std::fs::read_dir;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
+use crate::utils::mode_to_string;
 
 pub fn recurse(path: &str) -> Result<(), io::Error> {
     // ERROR: Only process directories
@@ -32,7 +33,7 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         println!
         (
             "{} {} {} {} {} {} {}",
-            permissions,
+            mode_to_string(permissions),
             num_hard_links,
             uid,
             gid,
