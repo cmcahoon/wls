@@ -1,9 +1,12 @@
 use chrono::{DateTime, Utc};
-use std::io;
+use libc::{c_char, getgrgid_r, getpwuid_r, group, passwd, size_t};
+use std::{io};
 use std::fs::metadata;
 use std::fs::read_dir;
+use std::mem::MaybeUninit;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
+use std::ptr::null_mut;
 use crate::utils::mode_to_string;
 
 pub fn recurse(path: &str) -> Result<(), io::Error> {
@@ -25,7 +28,9 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         let permissions = get_permissions(&entry_path).unwrap();
         let num_hard_links = get_number_hard_links(&entry_path).unwrap();
         let uid = get_uid(&entry_path).unwrap();
+        let user_name = get_user_name(uid);
         let gid = get_gid(&entry_path).unwrap();
+        let group_name = get_group_name(gid);
         let file_name = entry_path.file_name().unwrap();
         let file_size = get_size(entry_path.clone()).unwrap();
         let last_modified_time = get_last_modified_time(entry_path.clone()).unwrap();
@@ -35,8 +40,8 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
             "{} {} {} {} {} {} {}",
             mode_to_string(permissions),
             num_hard_links,
-            uid,
-            gid,
+            user_name,
+            group_name,
             file_size,
             last_modified_time,
             file_name.to_str().unwrap()
@@ -104,4 +109,44 @@ fn get_number_hard_links(path: &PathBuf) -> Result<u64, io::Error> {
         Ok(stats) => Ok(stats.nlink()),
         Err(error) => Err(error)
     }
+}
+
+fn get_user_name(uid: u32) -> String {
+    let mut pwd = MaybeUninit::<passwd>::uninit();
+    let mut buf: Vec<u8> = vec![0; 128];
+    let buflen: size_t = 128;
+    let mut _result = null_mut::<passwd>();
+
+    unsafe {
+        let _retval = getpwuid_r(uid, pwd.as_mut_ptr(), buf.as_mut_ptr() as *mut c_char, buflen, &mut _result);
+    }
+
+    let strlen = match buf.iter().position(|&x| 0 == x) {
+        Some(n) => n,
+        None => buf.len(),
+    };
+
+    buf.truncate(strlen);
+
+    String::from_utf8(buf).unwrap()
+}
+
+fn get_group_name(gid: u32) -> String {
+    let mut grp = MaybeUninit::<group>::uninit();
+    let mut buf: Vec<u8> = vec![0; 128];
+    let buflen: size_t = 128;
+    let mut _result = null_mut::<group>();
+
+    unsafe {
+        let _retval = getgrgid_r(gid, grp.as_mut_ptr(), buf.as_mut_ptr() as *mut c_char, buflen, &mut _result);
+    }
+
+    let strlen = match buf.iter().position(|&x| 0 == x) {
+        Some(n) => n,
+        None => buf.len(),
+    };
+
+    buf.truncate(strlen);
+
+    String::from_utf8(buf).unwrap()
 }
