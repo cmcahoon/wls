@@ -31,7 +31,12 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
         let user_name = get_user_name(uid);
         let gid = get_gid(&entry_path).unwrap();
         let group_name = get_group_name(gid);
-        let file_name = entry_path.file_name().unwrap();
+
+        let mut file_name = entry_path.file_name().unwrap().to_str().unwrap().to_string();
+        if entry.metadata()?.is_dir() {
+            file_name.push_str("/");
+        }
+
         let file_size = get_size(entry_path.clone()).unwrap();
         let last_modified_time = get_last_modified_time(entry_path.clone()).unwrap();
 
@@ -44,7 +49,7 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
             group_name,
             file_size,
             last_modified_time,
-            file_name.to_str().unwrap()
+            file_name
         );
     }
 
