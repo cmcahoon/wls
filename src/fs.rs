@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use colored::Colorize;
 use libc::{c_char, getgrgid_r, getpwuid_r, group, passwd, size_t};
 use std::{io};
 use std::fs::metadata;
@@ -49,7 +50,7 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
             group_name,
             file_size,
             last_modified_time,
-            file_name
+            if file_name.ends_with("/") { file_name.blue().bold() } else { file_name.normal() }
         );
     }
 
