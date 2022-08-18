@@ -8,7 +8,7 @@ use std::mem::MaybeUninit;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::ptr::null_mut;
-use crate::utils::mode_to_string;
+use crate::utils::{mode_to_string, Size};
 
 pub fn recurse(path: &str) -> Result<(), io::Error> {
     // ERROR: Only process directories
@@ -38,7 +38,7 @@ pub fn recurse(path: &str) -> Result<(), io::Error> {
             file_name.push_str("/");
         }
 
-        let file_size = get_size(entry_path.clone()).unwrap();
+        let file_size = Size::from_bytes(get_size(entry_path.clone()).unwrap());
         let last_modified_time = get_last_modified_time(entry_path.clone()).unwrap();
 
         println!

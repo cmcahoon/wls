@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Formatter;
+
 // File type mask values
 // TODO: Incomplete types based on this documentation:  https://man7.org/linux/man-pages/man7/inode.7.html
 const S_IFMT: u32 = 0o0170000;
@@ -18,6 +21,73 @@ const S_IRWXO: u32 = 0o00007;
 const S_IROTH: u32 = 0o00004;
 const S_IWOTH: u32 = 0o00002;
 const S_IXOTH: u32 = 0o00001;
+
+#[allow(dead_code)]
+#[derive(Copy, Clone)]
+enum SizeUnit {
+    Byte,
+    Kilo,
+    Mega,
+    Giga,
+    Tera,
+    Peta,
+    Exa,
+    Zetta,
+    Yotta,
+}
+
+pub struct Size {
+    value: u64,
+    unit: SizeUnit,
+}
+
+impl Size {
+    pub fn from_bytes(size: u64) -> Size {
+        Size { value: size, unit: SizeUnit::Byte }
+    }
+}
+
+impl fmt::Display for Size {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        // Convert size to a unit that always prints within 4 characters, including the unit label
+        let mut converted_value = self.value as f64;
+        let mut converted_unit = self.unit;
+
+        while converted_value >= 1024.0 {
+            converted_value = converted_value / 1024.0;
+            converted_unit = match converted_unit {
+                SizeUnit::Byte => SizeUnit::Kilo,
+                SizeUnit::Kilo => SizeUnit::Mega,
+                SizeUnit::Mega => SizeUnit::Giga,
+                SizeUnit::Giga => SizeUnit::Tera,
+                SizeUnit::Tera => SizeUnit::Peta,
+                SizeUnit::Peta => SizeUnit::Exa,
+                SizeUnit::Exa => SizeUnit::Zetta,
+                SizeUnit::Zetta => SizeUnit::Yotta,
+                SizeUnit::Yotta => panic!("Units higher than Yotta not supported.")
+            }
+        }
+
+        // Print the size with the unit label
+        let unit_label = match converted_unit {
+            SizeUnit::Byte => "",
+            SizeUnit::Kilo => "K",
+            SizeUnit::Mega => "M",
+            SizeUnit::Giga => "G",
+            SizeUnit::Tera => "T",
+            SizeUnit::Peta => "P",
+            SizeUnit::Exa => "E",
+            SizeUnit::Zetta => "Z",
+            SizeUnit::Yotta => "Y"
+        };
+
+        match converted_unit {
+            SizeUnit::Byte => write!(f, "{:>4}", converted_value),
+            _ => write!(f, "{:.1}{}", converted_value, unit_label)
+        }
+
+    }
+}
 
 pub fn mode_to_string(mode_bits: u32) -> String {
     let mut output = String::new();
